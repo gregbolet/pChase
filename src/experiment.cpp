@@ -447,7 +447,7 @@ int Experiment::parse_args(int argc, char* argv[]) {
 		printf("Final note: strict is not yet fully implemented, and\n");
 		printf("maps do not gracefully handle ill-formed map specifications.\n");
 
-		return 0;
+		return 1;
 	}
 
 
