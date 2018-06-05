@@ -53,17 +53,13 @@ Thread::start_routine(void* p) {
 
 	// deduce the amount of CPUs
 	int count = 0;
-	for (int i = 0; i < 8; i++)
-	{
-		if (CPU_ISSET(i, &cs))
-				count++;
-	}
+	for (; CPU_ISSET(count, &cs); count++);
 
 	// restrict to a single CPU
 	CPU_ZERO(&cs);
 	size_t size = CPU_ALLOC_SIZE(1);
 	CPU_SET_S(((Thread*) p)->id % count, size, &cs);
-	sched_setaffinity(pthread_self(), size, &cs);
+	pthread_setaffinity_np(pthread_self(), size, &cs);
 
 	// run
 	((Thread*) p)->run();
