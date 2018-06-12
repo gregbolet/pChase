@@ -13,9 +13,11 @@ find_package(Threads)
 find_library(LIBNUMA numa)
 option(USE_LIBNUMA "Build against NUMA libraries" ON) 
 
+find_library(LIBLIKWID likwid)
+
 include_directories(lib)
 add_subdirectory(lib/AsmJit)
-
+add_definitions(-DLIKWID_PERFMON)
 
 #
 # Code compilation
@@ -47,3 +49,4 @@ if (USE_LIBNUMA)
 	endif ()
 endif ()
 target_link_libraries(chase AsmJit)
+target_link_libraries(chase likwid)

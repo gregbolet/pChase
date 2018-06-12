@@ -24,6 +24,9 @@
 #include "output.h"
 #include "experiment.h"
 
+// LIKWID
+#include <likwid.h>
+
 // This program allocates and accesses
 // a number of blocks of memory, one or more
 // for each thread that executes.  Blocks
@@ -63,29 +66,35 @@
 int verbose = 0;
 
 int main(int argc, char* argv[]) {
-	Timer::calibrate(10000);
-	double clk_res = Timer::resolution();
+    Timer::calibrate(10000);
+    double clk_res = Timer::resolution();
 
-	Experiment e;
-	if (e.parse_args(argc, argv)) {
-		return 0;
-	}
+    LIKWID_MARKER_INIT;
 
-	SpinBarrier sb(e.num_threads);
-	Run r[e.num_threads];
-	for (int i = 0; i < e.num_threads; i++) {
-		r[i].set(e, &sb);
-		r[i].start();
-	}
-
-	for (int i = 0; i < e.num_threads; i++) {
-		r[i].wait();
-	}
-
-	int64 ops = Run::ops_per_chain();
-	std::vector<double> seconds = Run::seconds();
-
-	Output::print(e, ops, seconds, clk_res);
-
+    Experiment e;
+    if (e.parse_args(argc, argv)) {
 	return 0;
+    }
+
+    SpinBarrier sb(e.num_threads);
+    Run r[e.num_threads];
+    for (int i = 0; i < e.num_threads; i++) {
+	r[i].set(e, &sb);
+	r[i].start();
+    }
+
+    for (int i = 0; i < e.num_threads; i++) {
+	r[i].wait();
+    }
+
+    printf("Calling likwid_marker_close\n");
+    LIKWID_MARKER_CLOSE;
+    printf("Called likwid_marker_close\n");
+
+    int64 ops = Run::ops_per_chain();
+    std::vector<double> seconds = Run::seconds();
+
+    Output::print(e, ops, seconds, clk_res);
+
+    return 0;
 }

@@ -31,6 +31,8 @@
 #include <AsmJit/AsmJit.h>
 #include "timer.h"
 
+// LIKWID includes
+#include <likwid.h>
 
 //
 // Implementation
@@ -178,8 +180,10 @@ int Run::run() {
 		this->bp->barrier();
 
 		// chase pointers
+		LIKWID_MARKER_START("chase");
 		for (int i = 0; i < this->exp->iterations; i++)
 			bench((const Chain**) root);
+		LIKWID_MARKER_STOP("chase");
 
 		// barrier
 		this->bp->barrier();

@@ -22,6 +22,9 @@
 #include <pthread.h>
 #include <unistd.h>
 
+// LIKWID
+#include <likwid.h>
+
 Lock Thread::_global_lock;
 int Thread::count = 0;
 
@@ -51,6 +54,9 @@ Thread::start_routine(void* p) {
 	CPU_ZERO(&cs);
 	sched_getaffinity(0, sizeof(cs), &cs);
 
+	LIKWID_MARKER_THREADINIT;
+
+#if 0
 	// deduce the amount of CPUs
 	int count = 0;
 	for (; CPU_ISSET(count, &cs); count++);
@@ -60,6 +66,7 @@ Thread::start_routine(void* p) {
 	size_t size = CPU_ALLOC_SIZE(1);
 	CPU_SET_S(((Thread*) p)->id % count, size, &cs);
 	pthread_setaffinity_np(pthread_self(), size, &cs);
+#endif
 
 	// run
 	((Thread*) p)->run();
