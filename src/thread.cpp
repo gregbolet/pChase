@@ -49,14 +49,14 @@ int Thread::start() {
 
 void*
 Thread::start_routine(void* p) {
+	LIKWID_MARKER_THREADINIT;
+#if 0 // Let LIKWID handle affinity
 	// get the current affinity
 	cpu_set_t cs;
 	CPU_ZERO(&cs);
 	sched_getaffinity(0, sizeof(cs), &cs);
 
-	LIKWID_MARKER_THREADINIT;
 
-#if 0
 	// deduce the amount of CPUs
 	int count = 0;
 	for (; CPU_ISSET(count, &cs); count++);
