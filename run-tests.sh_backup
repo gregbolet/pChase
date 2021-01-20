@@ -1,0 +1,58 @@
+#!/bin/sh
+
+#
+# Initialisation
+#
+numexper=10
+
+# Configurable variables
+output=results.csv
+
+# Generate a timestamp
+timestamp=$(date +%Y%m%d-%H%M)
+
+# Create a temporary directory
+mkdir chase-$timestamp
+cd chase-$timestamp
+
+# Save some system information
+uname -a > kernel.txt
+cat /proc/cpuinfo > cpuinfo.txt
+cat /proc/meminfo > meminfo.txt
+
+#
+# Benchmark
+#
+
+echo Benchmark initiated at $(date +%Y%m%d-%H%M) | tee -a chase.log
+
+# Print header to CSV
+printf "chain_size,stride,chains_per_thread,num_threads," | tee -a $output
+../chase -o hdr | tee $output
+
+# Start trials
+for chain_size in 8k 16k 64k 256k 512k 1m 2m 4m 8m 10m 16m 32m 64m 128m 256m 512m 1024m
+do
+    for stride in 8 16 32 64 128 200 256 512 1024
+    do
+        for chains_per_thread in 1 2 4 8 16
+        do
+            for num_threads in 1 2 4 8 16
+            do
+                for iter in {1..2}
+                do
+                    printf "%s,%d,%d,%d," $chain_size $stride $chains_per_thread $num_threads | tee -a $output
+
+                    # Force kill after 60 seconds of inactivity
+                    timeout -k 60 60 ../chase -g 0 -f none -a reverse $stride -c $chain_size -t $num_threads -r $chains_per_thread -e 1 -o csv | tee -a $output
+
+                    # Wait between runs
+                    sleep 1
+                done 
+            done 
+        done 
+    done
+done
+
+echo Benchmark ended at $(date +%Y%m%d-%H%M) | tee -a chase.log
+
