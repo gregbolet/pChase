@@ -2,6 +2,17 @@
 # Project configuration
 #
 
+# Added by GREG
+#add_compile_definitions(GREG) #Used for debugging build
+#set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE RelWithDebInfo)
+#add_compile_definitions(ITERSTUDY) #Used for checking iterations
+add_compile_definitions(ITERSFIX) #Used as a fix for the iterations 
+
+add_compile_definitions(NUMA)
+add_compile_definitions(NUMA_VERSION1_COMPATIBILITY)
+# End of Added by GREG
+
 cmake_minimum_required(VERSION 2.6)
 project(pChase)
 

@@ -82,6 +82,10 @@ int main(int argc, char* argv[]) {
 		r[i].wait();
 	}
 
+#ifdef ITERSTUDY
+	return 0;
+#endif
+
 	int64 ops = Run::ops_per_chain();
 	std::vector<double> seconds = Run::seconds();
 

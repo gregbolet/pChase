@@ -31,6 +31,9 @@
 #include <AsmJit/AsmJit.h>
 #include "timer.h"
 
+#ifdef GREG
+#include <stdio.h>
+#endif
 
 //
 // Implementation
@@ -139,8 +142,13 @@ int Run::run() {
 			this->bp->barrier();
 
 			// chase pointers
+#ifndef ITERSFIX
 			for (int i = 0; i < iters; i++)
 				bench((const Chain**) root);
+#else
+			for (int64 i = 0; i < iters; i++)
+				bench((const Chain**) root);
+#endif
 
 			// barrier
 			this->bp->barrier();
@@ -166,6 +174,19 @@ int Run::run() {
 		this->bp->barrier();
 	}
 
+#ifdef ITERSTUDY
+	// Have the main thread print this
+	if(this->thread_id() == 0){
+		printf("%lld, %d\n", this->exp->iterations, this->exp->iterations);
+	}
+	// Skip the run tests, only care about iterations count
+	goto SKIPRUNS;
+#endif
+
+#ifdef GREG
+	printf("GREG Number of iterations: '%d'\n", this->exp->iterations);
+#endif
+
 	// run the experiments
 	for (int e = 0; e < this->exp->experiments; e++) {
 		// barrier
@@ -178,8 +199,13 @@ int Run::run() {
 		this->bp->barrier();
 
 		// chase pointers
+#ifndef ITERSFIX
 		for (int i = 0; i < this->exp->iterations; i++)
 			bench((const Chain**) root);
+#else
+		for (int64 i = 0; i < this->exp->iterations; i++)
+			bench((const Chain**) root);
+#endif
 
 		// barrier
 		this->bp->barrier();
@@ -199,6 +225,10 @@ int Run::run() {
 			}
 		}
 	}
+
+#ifdef ITERSTUDY
+SKIPRUNS:
+#endif
 
 	this->bp->barrier();
 

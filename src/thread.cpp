@@ -22,6 +22,10 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#ifdef GREG
+#include <stdio.h>
+#endif
+
 Lock Thread::_global_lock;
 int Thread::count = 0;
 
@@ -47,19 +51,28 @@ int Thread::start() {
 void*
 Thread::start_routine(void* p) {
 	// get the current affinity
-	cpu_set_t cs;
-	CPU_ZERO(&cs);
-	sched_getaffinity(0, sizeof(cs), &cs);
+	cpu_set_t cs; // CPU set structure
+	CPU_ZERO(&cs); //Clear the set to contain no CPUs
+	sched_getaffinity(0, sizeof(cs), &cs); //get the affinity of the calling process (i.e: this thread)
 
 	// deduce the amount of CPUs
+	// on our test system we have 8 cores, so this value
+	// should end up being 8 'CPUs'
 	int count = 0;
 	for (; CPU_ISSET(count, &cs); count++);
 
-	// restrict to a single CPU
-	CPU_ZERO(&cs);
-	size_t size = CPU_ALLOC_SIZE(1);
-	CPU_SET_S(((Thread*) p)->id % count, size, &cs);
-	pthread_setaffinity_np(pthread_self(), size, &cs);
+#ifdef GREG
+	printf("GREG NUM CPUS '%d'\n", count);
+#endif
+
+	// restrict to a single CPU (i.e: core)
+	CPU_ZERO(&cs); // clear the set so it contains no CPUs
+	size_t size = CPU_ALLOC_SIZE(1); // get the size of a cpuset containing 1 CPU
+
+	// Cyclically distribute the threads among cores (using mod)
+	// i.e: Spread scheduling
+	CPU_SET_S(((Thread*) p)->id % count, size, &cs); // Add the core (remainder value) to the set
+	pthread_setaffinity_np(pthread_self(), size, &cs); // Set the pthread affinity to the single core
 
 	// run
 	((Thread*) p)->run();

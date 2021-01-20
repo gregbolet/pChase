@@ -18,3 +18,5 @@ core
 .cproject
 .project
 
+# Ignore build folders
+/*build*
