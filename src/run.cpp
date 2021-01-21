@@ -179,7 +179,7 @@ int Run::run() {
 	if(this->thread_id() == 0){
 		printf("%lld, %d\n", this->exp->iterations, this->exp->iterations);
 	}
-	// Skip the run tests, only care about iterations count
+	// Skip the run tests, only care about seeing the iterations counts
 	goto SKIPRUNS;
 #endif
 
