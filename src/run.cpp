@@ -128,9 +128,19 @@ int Run::run() {
 	if (0 == this->exp->iterations) {
 		volatile static double istart = 0;
 		volatile static double istop = 0;
-		volatile static double elapsed = 0;
+
+		// Stack variable, how do threads break out of loop?
+		// Only thread 0 is updating elapsed
+		volatile static double elapsed = 0; 
 		volatile static int64 iters = 1;
+
+		// Bound should always be 0.2. Why design it so?
+		// Timer::resolution() will always have a difference of value
+		// between Timer::seconds() at the 1E6 level, which is << 0.2 = 200 ms
 		volatile double bound = std::max(0.2, 10 * Timer::resolution());
+
+		// If the time elapsed is greater than 200 ms, then we have
+		// the desired number of iterations
 		for (iters = 1; elapsed <= bound; iters = iters << 1) {
 			// barrier
 			this->bp->barrier();
@@ -163,7 +173,9 @@ int Run::run() {
 
 		// calculate the number of iterations
 		if (this->thread_id() == 0) {
+			// Default branch, exp->seconds is defaulted to 1 on exp init
 			if (0 < this->exp->seconds) {
+				// Execute up to a number of iterations such that we run for 1/2 a second
 				this->exp->iterations = std::max(1.0,
 						0.9999 + 0.5 * this->exp->seconds * iters / elapsed);
 			} else {
