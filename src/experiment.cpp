@@ -29,6 +29,19 @@
 // Local includes
 #include "chain.h"
 
+#ifdef PERF_CNTR_MODE
+	// Setup a list of the events we want to track
+	int Experiment::events_to_track[NUMEVENTS] = 
+	{PAPI_L1_DCM, PAPI_L1_ICM, PAPI_L2_DCM, 
+ 	 PAPI_L2_ICM, PAPI_L1_TCM, PAPI_L2_TCM,
+ 	 PAPI_TOT_INS, PAPI_L3_DCA, PAPI_L2_ICA,
+ 	 PAPI_L3_ICA, PAPI_L2_ICR, PAPI_L3_ICR,
+ 	 PAPI_L3_TCA, PAPI_REF_CYC}; 
+
+	// declare the arrays to store counter values
+	long long** Experiment::all_cntr_values = 0;
+#endif
+
 
 //
 // Implementation
@@ -69,6 +82,14 @@ Experiment::Experiment() :
 }
 
 Experiment::~Experiment() {
+#ifdef PERF_CNTR_MODE
+	// Free up memory at the end of the experiment
+	for(int i=0; i < this->num_threads; i++){
+		free(Experiment::all_cntr_values[i]);
+	}
+
+	free(Experiment::all_cntr_values);
+#endif
 }
 
 // interface:
@@ -510,6 +531,11 @@ int Experiment::parse_args(int argc, char* argv[]) {
 		this->alloc_map();
 		break;
 	}
+
+#ifdef PERF_CNTR_MODE
+	// Setup the arrays to store counter values
+	Experiment::all_cntr_values = (long long**) malloc(sizeof(long long*) * this->num_threads);
+#endif
 
 	return 0;
 }

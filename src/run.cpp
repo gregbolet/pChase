@@ -35,15 +35,6 @@
 #include <stdio.h>
 #endif
 
-#ifdef PERF_CNTR_MODE
-	// Setup a list of the events we want to track
-	int Run::events_to_track[NUMEVENTS] = 
-	{PAPI_L1_DCM, PAPI_L1_ICM, PAPI_L2_DCM, 
- 	 PAPI_L2_ICM, PAPI_L1_TCM, PAPI_L2_TCM,
- 	 PAPI_TOT_INS, PAPI_L3_DCA, PAPI_L2_ICA,
- 	 PAPI_L3_ICA, PAPI_L2_ICR, PAPI_L3_ICR,
- 	 PAPI_L3_TCA, PAPI_REF_CYC}; 
-#endif
 
 //
 // Implementation
@@ -83,9 +74,9 @@ int Run::run() {
 
 	// Setup the event counter memory where we will store
 	// the results of ALL the experiments on this thread
- 	long long* cntr_values = (long long*) malloc(NUMEVENTS * 
-	 											 sizeof(long long) * 
-												 this->exp->experiments);
+ 	this->cntr_values = (long long*) malloc(NUMEVENTS * 
+	 										sizeof(long long) * 
+											this->exp->experiments);
 
 	// Register this thread with PAPI
 	if ( ( retval = PAPI_register_thread() ) != PAPI_OK ) {
@@ -113,7 +104,7 @@ int Run::run() {
 	}
 
 	/* Add the events to track to out EventSet */
-	if (PAPI_add_events(EventSet, events_to_track, NUMEVENTS) != PAPI_OK){
+	if (PAPI_add_events(EventSet, Experiment::events_to_track, NUMEVENTS) != PAPI_OK){
 		fprintf(stderr, "PAPI add events error!\n");
 	}
 
@@ -291,7 +282,7 @@ int Run::run() {
 #ifdef PERF_CNTR_MODE
 		/* stop counting events in the Event Set */
 		// Store the resulting values into our counter values array
-		if (PAPI_stop( EventSet, (cntr_values+(NUMEVENTS*e)) ) != PAPI_OK){
+		if (PAPI_stop( EventSet, (this->cntr_values+(NUMEVENTS*e)) ) != PAPI_OK){
 			fprintf(stderr, "Could NOT stop eventset counting!\n");
 		}
 #endif
@@ -344,6 +335,13 @@ SKIPRUNS:
 	if ( ( retval = PAPI_unregister_thread(  ) ) != PAPI_OK ) {
 		fprintf(stderr, "PAPI could not unregister thread!\n");
 	}
+
+	// Store the counter values into the Experiments array
+	Experiment::all_cntr_values[this->thread_id()] = this->cntr_values;
+
+	// Free the counter values malloc we made at the beginning of the function
+	// Free the counter values in the experiment class destructor
+	//free(cntr_values);
 #endif
 
 	return 0;

@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef PERF_CNTR_MODE
+#include <papi.h>
+#include "run.h"
+#endif
 
 //
 // Implementation
@@ -70,7 +74,26 @@ void Output::header(Experiment &e, int64 ops, double ck_res) {
     printf("elapsed time (timer ticks),");
     printf("clock resolution (ns),", ck_res * 1E9);
     printf("memory latency (ns),");
+
+#ifdef PERF_CNTR_MODE
+    printf("memory bandwidth (MB/s),");
+
+    int i;
+    char out[PAPI_MAX_STR_LEN];
+
+    // Print out each performance counter name
+    for(i=0; i < NUMEVENTS-1; i++){
+        PAPI_event_code_to_name( Experiment::events_to_track[i], out );
+        printf("%s,", out);
+    }
+
+    PAPI_event_code_to_name( Experiment::events_to_track[i], out );
+    printf("%s\n", out);
+
+
+#else
     printf("memory bandwidth (MB/s)\n");
+#endif
 
     fflush(stdout);
 }
@@ -113,7 +136,22 @@ void Output::csv(Experiment &e, int64 ops, double secs, double ck_res) {
     printf("%.0f,", secs/ck_res);
     printf("%.2f,", ck_res * 1E9);
     printf("%.2f,", (secs / (ops * e.iterations)) * 1E9);
+
+#ifdef PERF_CNTR_MODE
+    printf("%.3f,", ((ops * e.iterations * e.chains_per_thread * e.num_threads * e.bytes_per_line) / secs) * 1E-6);
+
+    int i;
+
+    // Print out each performance counter value for each thread
+    for(i=0; i < NUMEVENTS-1; i++){
+        //do nothing for now
+    }
+
+    printf("\n");
+
+#else
     printf("%.3f\n", ((ops * e.iterations * e.chains_per_thread * e.num_threads * e.bytes_per_line) / secs) * 1E-6);
+#endif
 
     fflush(stdout);
 }

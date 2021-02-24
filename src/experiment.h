@@ -23,12 +23,27 @@
 #include "types.h"
 
 
+#ifdef PERF_CNTR_MODE
+#include <papi.h>	
+#include <stdio.h>
+#include <stdlib.h>
+
+#define NUMEVENTS 14
+#define ERRCHCK if( retval != PAPI_OK ){fprintf(stderr, "PAPI ERROR! %d\n", retval);}
+#endif
+
 //
 // Class definition
 //
 
 class Experiment {
 public:
+
+#ifdef PERF_CNTR_MODE
+	static int events_to_track[NUMEVENTS];
+	static long long** all_cntr_values;
+#endif
+
 	Experiment();
 	~Experiment();
 

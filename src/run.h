@@ -31,15 +31,6 @@
 #include "spinbarrier.h"
 
 
-#ifdef PERF_CNTR_MODE
-#include <papi.h>	
-#include <stdio.h>
-#include <stdlib.h>
-
-#define NUMEVENTS 14
-#define ERRCHCK if( retval != PAPI_OK ){fprintf(stderr, "PAPI ERROR! %d\n", retval);}
-#endif
-
 //
 // Class definition
 //
@@ -57,10 +48,6 @@ public:
 		return _seconds;
 	}
 
-#ifdef PERF_CNTR_MODE
-	static int events_to_track[NUMEVENTS];
-#endif
-
 private:
 	Experiment* exp; // experiment data
 	SpinBarrier* bp; // spin barrier used by all threads
@@ -69,6 +56,10 @@ private:
 	Chain* random_mem_init(Chain *m);
 	Chain* forward_mem_init(Chain *m);
 	Chain* reverse_mem_init(Chain *m);
+
+#ifdef PERF_CNTR_MODE
+	long long* cntr_values;
+#endif
 
 	static Lock global_mutex; // global lock
 	static int64 _ops_per_chain; // total number of operations per chain
