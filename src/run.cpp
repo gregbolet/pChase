@@ -35,6 +35,16 @@
 #include <stdio.h>
 #endif
 
+#ifdef PERF_CNTR_MODE
+	// Setup a list of the events we want to track
+	int Run::events_to_track[NUMEVENTS] = 
+	{PAPI_L1_DCM, PAPI_L1_ICM, PAPI_L2_DCM, 
+ 	 PAPI_L2_ICM, PAPI_L1_TCM, PAPI_L2_TCM,
+ 	 PAPI_TOT_INS, PAPI_L3_DCA, PAPI_L2_ICA,
+ 	 PAPI_L3_ICA, PAPI_L2_ICR, PAPI_L3_ICR,
+ 	 PAPI_L3_TCA, PAPI_REF_CYC}; 
+#endif
+
 //
 // Implementation
 //
@@ -63,7 +73,54 @@ void Run::set(Experiment &e, SpinBarrier* sbp) {
 	this->bp = sbp;
 }
 
+// Each thread will run this function
 int Run::run() {
+
+#ifdef PERF_CNTR_MODE
+	// Keep track of the eventset identifier for this thread
+ 	int EventSet = PAPI_NULL;
+ 	int retval;
+
+	// Setup the event counter memory where we will store
+	// the results of ALL the experiments on this thread
+ 	long long* cntr_values = (long long*) malloc(NUMEVENTS * 
+	 											 sizeof(long long) * 
+												 this->exp->experiments);
+
+	// Register this thread with PAPI
+	if ( ( retval = PAPI_register_thread() ) != PAPI_OK ) {
+		fprintf(stderr, "PAPI thread registration error!\n");
+	}
+
+	/* Create the Event Set for this thread */
+	if (PAPI_create_eventset(&EventSet) != PAPI_OK){
+		fprintf(stderr, "PAPI eventset creation error!\n");
+	}
+
+	/* In Component PAPI, EventSets must be assigned a component index
+	   before you can fiddle with their internals. 0 is always the cpu component */
+	retval = PAPI_assign_eventset_component( EventSet, 0 );
+	if ( retval != PAPI_OK ) {
+		fprintf(stderr, "PAPI assign eventset component error!\n");
+	}
+
+	/* Convert our EventSet to a multiplexed EventSet*/
+	if ( ( retval = PAPI_set_multiplex( EventSet ) ) != PAPI_OK ) {
+		if ( retval == PAPI_ENOSUPP) {
+			fprintf(stderr, "PAPI Multiplexing not supported!\n");
+	   	}
+		fprintf(stderr, "PAPI error setting up multiplexing!\n");
+	}
+
+	/* Add the events to track to out EventSet */
+	if (PAPI_add_events(EventSet, events_to_track, NUMEVENTS) != PAPI_OK){
+		fprintf(stderr, "PAPI add events error!\n");
+	}
+
+	// Make sure all the threads get here
+	this->bp->barrier();
+#endif
+
 	// first allocate all memory for the chains,
 	// making sure it is allocated within the
 	// intended numa domains
@@ -210,6 +267,18 @@ int Run::run() {
 			start = Timer::seconds();
 		this->bp->barrier();
 
+#ifdef PERF_CNTR_MODE
+		// Zero-out all the counters in the eventset
+		if (PAPI_reset(EventSet) != PAPI_OK){
+			fprintf(stderr, "Could NOT reset eventset!\n");
+		}
+
+		/* Start counting events in the Event Set */
+		if (PAPI_start(EventSet) != PAPI_OK){
+			fprintf(stderr, "Could NOT start eventset counting!\n");
+		}
+#endif
+
 		// chase pointers
 #ifndef ITERSFIX
 		for (int i = 0; i < this->exp->iterations; i++)
@@ -217,6 +286,14 @@ int Run::run() {
 #else
 		for (int64 i = 0; i < this->exp->iterations; i++)
 			bench((const Chain**) root);
+#endif
+
+#ifdef PERF_CNTR_MODE
+		/* stop counting events in the Event Set */
+		// Store the resulting values into our counter values array
+		if (PAPI_stop( EventSet, (cntr_values+(NUMEVENTS*e)) ) != PAPI_OK){
+			fprintf(stderr, "Could NOT stop eventset counting!\n");
+		}
 #endif
 
 		// barrier
@@ -251,6 +328,23 @@ SKIPRUNS:
 	}
 	if (chain_memory != NULL
 		) delete[] chain_memory;
+
+#ifdef PERF_CNTR_MODE
+	// Remove all events from the eventset
+	if ( ( retval = PAPI_cleanup_eventset( EventSet ) ) != PAPI_OK ) {
+		fprintf(stderr, "PAPI could not cleanup eventset!\n");
+	}
+
+	// Deallocate the empty eventset from memory
+	if ( ( retval = PAPI_destroy_eventset( &EventSet) ) != PAPI_OK ) {
+		fprintf(stderr, "PAPI could not destroy eventset!\n");
+	}
+
+	// Shut down this thread and free the thread ID
+	if ( ( retval = PAPI_unregister_thread(  ) ) != PAPI_OK ) {
+		fprintf(stderr, "PAPI could not unregister thread!\n");
+	}
+#endif
 
 	return 0;
 }

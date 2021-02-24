@@ -8,6 +8,11 @@
 #set(CMAKE_BUILD_TYPE RelWithDebInfo)
 #add_compile_definitions(ITERSTUDY) #Used for checking iterations
 add_compile_definitions(ITERSFIX) #Used as a fix for the iterations 
+add_compile_definitions(PERF_CNTR_MODE) # Enables the PAPI counter profiling
+
+# Tell CMake where to find the PAPI library files
+include_directories(/usr/local/include)
+link_directories(/usr/local/lib)
 
 add_compile_definitions(NUMA)
 add_compile_definitions(NUMA_VERSION1_COMPATIBILITY)
@@ -42,6 +47,10 @@ add_library(output src/output.h src/output.cpp)
 
 add_library(run src/run.h src/run.cpp)
 target_link_libraries(run lock thread)
+
+#Added by GREG
+target_link_libraries(run papi)
+#End of added by GREG
 
 add_library(spinbarrier src/spinbarrier.h src/spinbarrier.cpp)
 

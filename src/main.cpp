@@ -71,8 +71,42 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
+
+#ifdef PERF_CNTR_MODE
+	// Let's set up PAPI from the main thread
+	int retval;
+
+	// Check correct versioning
+	retval = PAPI_library_init( PAPI_VER_CURRENT );
+	if ( retval != PAPI_VER_CURRENT ) {
+		fprintf(stderr, "PAPI_library_init error: code [%d]\n", retval );
+	}
+
+	// Initialize the multiplexing
+	retval = PAPI_multiplex_init();
+	if ( retval == PAPI_ENOSUPP) {
+	   fprintf(stderr, "Multiplexing not supported!\n");
+	}
+	else if ( retval != PAPI_OK ) {
+		fprintf(stderr, "PAPI multiplexing error: code [%d]\n", retval );
+	}
+
+	// Initialize the threading support
+	retval = PAPI_thread_init( ( unsigned long ( * )( void ) ) ( pthread_self ) );
+	if ( retval == PAPI_ECMP) {
+	   fprintf(stderr, "PAPI thread init error: code [%d] PAPI_ECMP!\n", retval);
+	}
+	else if ( retval != PAPI_OK ) {
+	   fprintf(stderr, "PAPI thread init error: code [%d]!\n", retval);
+	}
+
+
+#endif
+
 	SpinBarrier sb(e.num_threads);
 	Run r[e.num_threads];
+
+	// Kick off the child threads!
 	for (int i = 0; i < e.num_threads; i++) {
 		r[i].set(e, &sb);
 		r[i].start();

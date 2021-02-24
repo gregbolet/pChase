@@ -31,10 +31,18 @@
 #include "spinbarrier.h"
 
 
+#ifdef PERF_CNTR_MODE
+#include <papi.h>	
+#include <stdio.h>
+#include <stdlib.h>
+
+#define NUMEVENTS 14
+#define ERRCHCK if( retval != PAPI_OK ){fprintf(stderr, "PAPI ERROR! %d\n", retval);}
+#endif
+
 //
 // Class definition
 //
-
 class Run: public Thread {
 public:
 	Run();
@@ -49,6 +57,10 @@ public:
 		return _seconds;
 	}
 
+#ifdef PERF_CNTR_MODE
+	static int events_to_track[NUMEVENTS];
+#endif
+
 private:
 	Experiment* exp; // experiment data
 	SpinBarrier* bp; // spin barrier used by all threads
@@ -62,5 +74,6 @@ private:
 	static int64 _ops_per_chain; // total number of operations per chain
 	static std::vector<double> _seconds; // number of seconds for each experiment
 };
+
 
 #endif
