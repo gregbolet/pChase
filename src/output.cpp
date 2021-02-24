@@ -81,7 +81,7 @@ void Output::header(Experiment &e, int64 ops, double ck_res) {
     int i;
     char out[PAPI_MAX_STR_LEN];
 
-    // Print out each performance counter name
+    // Print out each performance counter name to its own column
     for(i=0; i < NUMEVENTS-1; i++){
         PAPI_event_code_to_name( Experiment::events_to_track[i], out );
         printf("%s,", out);
@@ -140,11 +140,34 @@ void Output::csv(Experiment &e, int64 ops, double secs, double ck_res) {
 #ifdef PERF_CNTR_MODE
     printf("%.3f,", ((ops * e.iterations * e.chains_per_thread * e.num_threads * e.bytes_per_line) / secs) * 1E-6);
 
-    int i;
+    // The format for this output will be the following:
+    // "thread0:val,val,val;thread1:val,val,val"
 
-    // Print out each performance counter value for each thread
-    for(i=0; i < NUMEVENTS-1; i++){
-        //do nothing for now
+    int cntr,thrd,exper;
+
+    // For each counter, print the data we have 
+    for(cntr=0; cntr < NUMEVENTS; cntr++){
+
+        printf("\"");
+        // For each thread, print its values
+        for(thrd=0; thrd < e.num_threads; thrd++){
+            printf("%d:", thrd);
+
+            // Print the values of each experiment with this thread
+            for(exper=0; exper < e.experiments-1; exper++){
+                printf("%lld,", e.all_cntr_values[thrd][exper*e.experiments+cntr]);
+            }
+            printf("%lld", e.all_cntr_values[thrd][exper*e.experiments+cntr]);
+
+            if(thrd != e.num_threads-1){
+                printf(";");
+            }
+        }
+        printf("\"");
+
+        if(cntr != NUMEVENTS-1){
+            printf(",");
+        }
     }
 
     printf("\n");

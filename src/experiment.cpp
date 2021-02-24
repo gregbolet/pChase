@@ -83,11 +83,12 @@ Experiment::Experiment() :
 
 Experiment::~Experiment() {
 #ifdef PERF_CNTR_MODE
-	// Free up memory at the end of the experiment
+	// Free up counter memory at the end of the experiment
 	for(int i=0; i < this->num_threads; i++){
 		free(Experiment::all_cntr_values[i]);
 	}
 
+	// Free up the parent pointer
 	free(Experiment::all_cntr_values);
 #endif
 }
