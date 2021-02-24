@@ -34,7 +34,11 @@ class Output {
 public:
 	static void print(Experiment &e, int64 ops, std::vector<double> seconds, double ck_res);
 	static void header(Experiment &e, int64 ops, double ck_res);
+#ifdef PERF_CNTR_MODE
+	static void csv(Experiment &e, int64 ops, double seconds, int experIdx, double ck_res);
+#else
 	static void csv(Experiment &e, int64 ops, double seconds, double ck_res);
+#endif
 	static void table(Experiment &e, int64 ops, double seconds, double ck_res);
 private:
 };

@@ -36,11 +36,19 @@ void Output::print(Experiment &e, int64 ops, std::vector<double> seconds, double
 		Output::header(e, ops, ck_res);
 	} else if (e.output_mode == Experiment::CSV) {
 		for (int i = 0; i < seconds.size(); i++)
+#ifdef PERF_CNTR_MODE
+			Output::csv(e, ops, seconds[i], i, ck_res);
+#else
 			Output::csv(e, ops, seconds[i], ck_res);
+#endif
 	} else if (e.output_mode == Experiment::BOTH) {
 		Output::header(e, ops, ck_res);
 		for (int i = 0; i < seconds.size(); i++)
+#ifdef PERF_CNTR_MODE
+			Output::csv(e, ops, seconds[i], i, ck_res);
+#else
 			Output::csv(e, ops, seconds[i], ck_res);
+#endif
 	} else {
 		long double averaged_seconds = 0;
 		for (int i = 0; i < seconds.size(); i++)
@@ -98,7 +106,11 @@ void Output::header(Experiment &e, int64 ops, double ck_res) {
     fflush(stdout);
 }
 
+#ifdef PERF_CNTR_MODE
+void Output::csv(Experiment &e, int64 ops, double secs, int experIdx, double ck_res) {
+#else
 void Output::csv(Experiment &e, int64 ops, double secs, double ck_res) {
+#endif
     printf("%ld,", e.pointer_size);
     printf("%ld,", e.bytes_per_line);
     printf("%ld,", e.bytes_per_page);
@@ -141,26 +153,22 @@ void Output::csv(Experiment &e, int64 ops, double secs, double ck_res) {
     printf("%.3f,", ((ops * e.iterations * e.chains_per_thread * e.num_threads * e.bytes_per_line) / secs) * 1E-6);
 
     // The format for this output will be the following:
-    // "thread0:val,val,val;thread1:val,val,val"
+    // "thread1_cntr1,thread2_cntr1,thread3_cntr1" "thread1_cntr2,thread2_cntr2,thread3_cntr2"
 
-    int cntr,thrd,exper;
+    int cntr,thrd;
 
     // For each counter, print the data we have 
     for(cntr=0; cntr < NUMEVENTS; cntr++){
-
         printf("\"");
+
         // For each thread, print its values
         for(thrd=0; thrd < e.num_threads; thrd++){
-            printf("%d:", thrd);
 
-            // Print the values of each experiment with this thread
-            for(exper=0; exper < e.experiments-1; exper++){
-                printf("%lld,", e.all_cntr_values[thrd][exper*e.experiments+cntr]);
-            }
-            printf("%lld", e.all_cntr_values[thrd][exper*e.experiments+cntr]);
+            // Print the value of the experiment with this thread
+            printf("%lld", e.all_cntr_values[thrd][experIdx*e.experiments+cntr]);
 
             if(thrd != e.num_threads-1){
-                printf(";");
+                printf(",");
             }
         }
         printf("\"");
