@@ -74,9 +74,8 @@ int Run::run() {
 
 	// Setup the event counter memory where we will store
 	// the results of ALL the experiments on this thread
- 	this->cntr_values = (long long*) malloc(NUMEVENTS * 
-	 										sizeof(long long) * 
-											this->exp->experiments);
+	// Let's initialize the whole array to 0
+ 	this->cntr_values = (long long*) calloc(NUMEVENTS * this->exp->experiments, sizeof(long long));
 
 	// Register this thread with PAPI
 	if ( ( retval = PAPI_register_thread() ) != PAPI_OK ) {

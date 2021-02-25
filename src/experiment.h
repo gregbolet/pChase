@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NUMEVENTS 14
+#define NUMEVENTS 12
 #define ERRCHCK if( retval != PAPI_OK ){fprintf(stderr, "PAPI ERROR! %d\n", retval);}
 #endif
 
