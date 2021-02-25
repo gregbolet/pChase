@@ -103,9 +103,20 @@ int Run::run() {
 		fprintf(stderr, "PAPI error setting up multiplexing!\n");
 	}
 
-	/* Add the events to track to out EventSet */
-	if (PAPI_add_events(EventSet, Experiment::events_to_track, NUMEVENTS) != PAPI_OK){
-		fprintf(stderr, "PAPI add events error!\n");
+	// Add each of the events by getting their event code from the string
+	int eventCode = PAPI_NULL;
+	for(int i = 0; i < NUMEVENTS; i++){
+
+		if((retval = PAPI_event_name_to_code(Experiment::events_to_track[i], &eventCode)) != PAPI_OK){
+			fprintf(stderr, "Event code for [%s] does not exist! errcode:[%d]\n", 
+				Experiment::events_to_track[i], retval);
+		}
+
+		/* Add the events to track to out EventSet */
+		if ((retval=PAPI_add_event(EventSet, eventCode)) != PAPI_OK){
+			fprintf(stderr, "Add event [%s] error! errcode:[%d]\n", 
+				Experiment::events_to_track[i], retval);
+		}
 	}
 
 	// Make sure all the threads get here

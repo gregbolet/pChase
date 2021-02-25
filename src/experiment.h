@@ -40,7 +40,7 @@ class Experiment {
 public:
 
 #ifdef PERF_CNTR_MODE
-	static int events_to_track[NUMEVENTS];
+	static char* events_to_track[NUMEVENTS];
 	static long long** all_cntr_values;
 #endif
 

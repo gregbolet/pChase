@@ -87,17 +87,11 @@ void Output::header(Experiment &e, int64 ops, double ck_res) {
     printf("memory bandwidth (MB/s),");
 
     int i;
-    char out[PAPI_MAX_STR_LEN];
-
     // Print out each performance counter name to its own column
     for(i=0; i < NUMEVENTS-1; i++){
-        PAPI_event_code_to_name( Experiment::events_to_track[i], out );
-        printf("%s,", out);
+        printf("%s,", e.events_to_track[i]);
     }
-
-    PAPI_event_code_to_name( Experiment::events_to_track[i], out );
-    printf("%s\n", out);
-
+    printf("%s\n", e.events_to_track[i]);
 
 #else
     printf("memory bandwidth (MB/s)\n");

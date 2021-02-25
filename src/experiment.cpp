@@ -31,12 +31,23 @@
 
 #ifdef PERF_CNTR_MODE
 	// Setup a list of the events we want to track
-	int Experiment::events_to_track[NUMEVENTS] = 
-	{PAPI_L1_DCM, PAPI_L1_ICM, PAPI_L2_DCM, 
- 	 PAPI_L2_ICM, PAPI_L1_TCM, PAPI_L2_TCM,
- 	 PAPI_TOT_INS, PAPI_L3_DCA, PAPI_L2_ICA,
- 	 PAPI_L3_ICA, PAPI_L2_ICR, PAPI_L3_ICR,
- 	 PAPI_L3_TCA, PAPI_REF_CYC}; 
+	char* Experiment::events_to_track[NUMEVENTS] = 
+	{
+	 "RESOURCE_STALLS:ROB", 
+	 "PAPI_L1_ICM", 
+	 "PAPI_L2_DCM", 
+ 	 "PAPI_L2_ICM", 
+	 "PAPI_L1_TCM", 
+	 "PAPI_L2_TCM",
+ 	 "PAPI_TOT_INS", 
+	 "PAPI_L3_DCA", 
+	 "PAPI_L2_ICA",
+ 	 "PAPI_L3_ICA", 
+	 "PAPI_L2_ICR", 
+	 "PAPI_L3_ICR",
+ 	 "PAPI_L3_TCA", 
+	 "PAPI_REF_CYC"
+	 }; 
 
 	// declare the arrays to store counter values
 	long long** Experiment::all_cntr_values = 0;
