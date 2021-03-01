@@ -33,18 +33,31 @@
 	// Setup a list of the events we want to track
 	char* Experiment::events_to_track[NUMEVENTS] = 
 	{
-	 "RESOURCE_STALLS:ROB", 
-	 "PAPI_L1_ICM", 
-	 "PAPI_L1_DCM", 
-	 "PAPI_L2_TCM",
- 	 "PAPI_PRF_DM", 
-	 "PAPI_L3_DCA", 
-	 "PAPI_L2_ICA",
- 	 "PAPI_L3_ICA", 
-	 "PAPI_L2_ICR", 
-	 "PAPI_L3_ICR",
- 	 "PAPI_L3_TCA", 
-	 "ROB_MISC_EVENTS:LBR_INSERTS"
+	 "RESOURCE_STALLS:ROB", // ROB full stall cycles 
+	 "ROB_MISC_EVENTS:LBR_INSERTS", // Count Last Branch Record Inserts
+	 "PAPI_L1_ICM", // L1 instruction cache misses
+	 "PAPI_L1_DCM", // L1 data cache misses
+	 "PAPI_L2_TCM", // L2 total cache misses
+ 	 "PAPI_L3_TCM", // L3 total cache misses
+	 "PAPI_STL_CCY", // Cycles with no instructions completed
+	 "PAGE_WALKER_LOADS:DTLB_L1", // DTLB page walkers that hit L1D and LFB
+	 "PAGE_WALKER_LOADS:DTLB_L2", // DTLB page walkers that hit L2 
+	 "PAGE_WALKER_LOADS:DTLB_L3", // DTLB page walkers that hit L3 
+	 "PAGE_WALKER_LOADS:DTLB_MEMORY", // DTLB page walkers that hit main memory
+	 "DTLB_LOAD_MISSES:MISS_CAUSES_A_WALK", // Misses in all DTLB levels that cause page walks
+	 "DTLB_LOAD_MISSES:STLB_HIT", // Number of cache load STLB hits. No page walk 
+	 "DTLB_STORE_MISSES:MISS_CAUSES_A_WALK", // Misses in all DTLB levels that cause page walks
+	 "DTLB_STORE_MISSES:STLB_HIT", // Number of cache load STLB hits. No page walk 
+	 "ITLB_MISSES:STLB_HIT", // Number of cache load STLB hits. No page walk
+	 "TLB_FLUSH:DTLB_THREAD", // Count number of DTLB flushes of thread-specific entries
+	 "TLB_FLUSH:STLB_ANY", // Count number of any STLB flushes 
+	 "CYCLE_ACTIVITY:STALLS_L1D_PENDING", // Execution stalls due to pending L1D load cache misses         
+	 "CYCLE_ACTIVITY:STALLS_L2_PENDING", // Execution stalls due to pending L2 load cache misses         
+	 "CYCLE_ACTIVITY:STALLS_LDM_PENDING", // Execution stalls due to memory subsystem
+	 "L2_RQSTS:L2_PF_MISS", // requests from L2 hdwr prefetchers that miss L2 cache
+	 "L2_RQSTS:MISS", // All requests that miss L2 cache
+	 "L1D_PEND_MISS:PENDING", // Cycles with outstanding L1D load misses
+	 "ix86arch::LLC_MISSES" // Count cache miss conditions for refs to LLC
 	 }; 
 
 	// declare the arrays to store counter values

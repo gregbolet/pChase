@@ -262,12 +262,6 @@ int Run::run() {
 		// barrier
 		this->bp->barrier();
 
-		// start timer
-		double start = 0;
-		if (this->thread_id() == 0)
-			start = Timer::seconds();
-		this->bp->barrier();
-
 #ifdef PERF_CNTR_MODE
 		// Zero-out all the counters in the eventset
 		if (PAPI_reset(EventSet) != PAPI_OK){
@@ -280,6 +274,12 @@ int Run::run() {
 		}
 #endif
 
+		// start timer
+		double start = 0;
+		if (this->thread_id() == 0)
+			start = Timer::seconds();
+		this->bp->barrier();
+
 		// chase pointers
 #ifndef ITERSFIX
 		for (int i = 0; i < this->exp->iterations; i++)
@@ -289,13 +289,6 @@ int Run::run() {
 			bench((const Chain**) root);
 #endif
 
-#ifdef PERF_CNTR_MODE
-		/* stop counting events in the Event Set */
-		// Store the resulting values into our counter values array
-		if (PAPI_stop( EventSet, (this->cntr_values+(NUMEVENTS*e)) ) != PAPI_OK){
-			fprintf(stderr, "Could NOT stop eventset counting!\n");
-		}
-#endif
 
 		// barrier
 		this->bp->barrier();
@@ -304,6 +297,15 @@ int Run::run() {
 		double stop = 0;
 		if (this->thread_id() == 0)
 			stop = Timer::seconds();
+
+#ifdef PERF_CNTR_MODE
+		/* stop counting events in the Event Set */
+		// Store the resulting values into our counter values array
+		if (PAPI_stop( EventSet, (this->cntr_values+(NUMEVENTS*e)) ) != PAPI_OK){
+			fprintf(stderr, "Could NOT stop eventset counting!\n");
+		}
+#endif
+
 		this->bp->barrier();
 
 		if (0 <= e) {
